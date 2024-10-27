@@ -17,6 +17,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Function to increment MechCoins for the currently logged-in user
+  Future<void> incrementMechCoins(String userId) async {
+    try {
+      DocumentReference userDoc = _firestore.collection('cars').doc(userId);
+      DocumentSnapshot userSnapshot = await userDoc.get();
+
+      if (userSnapshot.exists) {
+        await userDoc.update({
+          'mechCoins': FieldValue.increment(1), // Increment by 1
+        });
+      } else {
+        print("User document not found.");
+      }
+    } catch (e) {
+      print("Error updating mechCoins: ${e.toString()}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error updating mechCoins: ${e.toString()}")),
+      );
+    }
+  }
+
   // Sign up function
   Future<void> _signUp() async {
     try {
@@ -26,13 +47,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text.trim(),
       );
 
+      String userId = userCredential.user!.uid; // Get new user's ID
+
       // Store additional user data in Firestore under "cars" collection
-      await _firestore.collection('cars').doc(userCredential.user!.uid).set({
+      await _firestore.collection('cars').doc(userId).set({
         'name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'address': _addressController.text.trim(),
         'carModel': _carModelController.text.trim(),
+        'mechCoins': 0, // Initialize mechCoins in the new user's document
       });
+
+      // Get the currently logged-in user's ID
+      User? currentUser = _auth.currentUser;
+      String loggedInUserId = currentUser!.uid; // Get logged-in user ID
+
+      // Increment mechCoins for the logged-in user
+      await incrementMechCoins(loggedInUserId); // Increment mechCoins for the logged-in user
 
       // Navigate to the dashboard after successful sign-up
       Navigator.pushReplacementNamed(context, '/dashboard');
@@ -49,12 +80,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Sign Up'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        // Removed the leading back button
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
