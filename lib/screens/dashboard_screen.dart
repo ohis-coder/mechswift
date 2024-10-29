@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -59,13 +59,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   "Welcome to MechSwift Dashboard",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 30),
-                // Display Mech Coins
-                Text(
-                  "Mech Coins: $_mechCoins", 
-                  style: TextStyle(fontSize: 18),
+                // Display Mech Coins with a cinematic card view
+                Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  color: Colors.blueAccent, // Card background color
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Your Mech Coins",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          "$_mechCoins",
+                          style: TextStyle(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.yellowAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 SizedBox(height: 30),
                 ElevatedButton(

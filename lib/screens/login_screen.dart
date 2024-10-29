@@ -10,6 +10,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _obscurePassword = true; // Variable to toggle password visibility
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -54,8 +55,22 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: "Password"),
-              obscureText: true,
+              decoration: InputDecoration(
+                labelText: "Password",
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword; // Toggle password visibility
+                    });
+                  },
+                ),
+              ),
+              obscureText: _obscurePassword, // Use the variable to hide/show password
             ),
             SizedBox(height: 20),
             ElevatedButton(

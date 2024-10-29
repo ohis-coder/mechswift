@@ -13,6 +13,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _addressController = TextEditingController();
   final _carModelController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _obscurePassword = true; // Variable to toggle password visibility
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -106,8 +107,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               TextField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: "Password"),
-                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword; // Toggle password visibility
+                      });
+                    },
+                  ),
+                ),
+                obscureText: _obscurePassword, // Use the variable to hide/show password
               ),
               SizedBox(height: 20),
               ElevatedButton(

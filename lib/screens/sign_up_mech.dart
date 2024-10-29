@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:math';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geocoding/geocoding.dart'; // Import geocoding package
+import 'package:geolocator/geolocator.dart'; // Import geolocator package
 
 class SignUpMechScreen extends StatefulWidget {
   final String userId;
@@ -28,6 +29,41 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     Random random = Random();
     return List.generate(8, (index) => chars[random.nextInt(chars.length)]).join();
+  }
+
+  // Get current location and convert it to a readable address
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Location services are disabled.")),
+        );
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Location permission denied.")),
+          );
+          return;
+        }
+      }
+
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+      Placemark place = placemarks[0]; // Get the first result
+      String readableAddress = "${place.street}, ${place.locality}, ${place.country}"; // Format the address
+      _addressController.text = readableAddress; // Set the address field
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error getting location: ${e.toString()}")),
+      );
+    }
   }
 
   // Pick an image from gallery or take a photo
@@ -156,9 +192,19 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
               controller: _nameController,
               decoration: InputDecoration(labelText: "Mechanic's Name"),
             ),
-            TextField(
-              controller: _addressController,
-              decoration: InputDecoration(labelText: "Mechanic's Address"),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _addressController,
+                    decoration: InputDecoration(labelText: "Mechanic's Address"),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.my_location), // Location icon
+                  onPressed: _getCurrentLocation, // Fetch and set address on icon press
+                ),
+              ],
             ),
             TextField(
               controller: _phoneController,

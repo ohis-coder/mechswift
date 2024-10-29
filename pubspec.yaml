@@ -36,6 +36,14 @@ dependencies:
   firebase_storage: ^12.3.3
   crypto: ^3.0.6
   image_picker: ^0.8.7+3
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geolocator: ^13.0.1
+  location: ^7.0.1
+  geocoding: ^3.0.0
+  flutter_map_location_marker: ^9.1.1
+  flutter_compass: ^0.8.0
+  permission_handler: ^11.3.1
 
 
   # The following adds the Cupertino Icons font to your application.
