@@ -62,36 +62,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 30),
-                // Display Mech Coins with a cinematic card view
-                Card(
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  color: Colors.blueAccent, // Card background color
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Your Mech Coins",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                // Display Mech Coins with a cinematic card view and onTap to navigate
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/mechcoins_trade_store'); // Navigate to MechCoins Trade Store
+                  },
+                  child: Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    color: Colors.blueAccent, // Card background color
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "Your Mech Coins",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          "$_mechCoins",
-                          style: TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.yellowAccent,
+                          SizedBox(height: 10),
+                          Text(
+                            "$_mechCoins",
+                            style: TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.yellowAccent,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
