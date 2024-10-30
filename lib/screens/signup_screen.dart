@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'dart:async';
 
 class SignUpScreen extends StatefulWidget {
   @override
@@ -13,12 +16,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _addressController = TextEditingController();
   final _carModelController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true; // Variable to toggle password visibility
+  bool _obscurePassword = true;
+  bool _isSignUpEnabled = true; // Track if sign-up button is enabled
+  int _countdown = 0; // Countdown timer variable
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Function to increment MechCoins for the currently logged-in user
+  // Increment MechCoins for the currently logged-in user
   Future<void> incrementMechCoins(String userId) async {
     try {
       DocumentReference userDoc = _firestore.collection('cars').doc(userId);
@@ -26,7 +31,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       if (userSnapshot.exists) {
         await userDoc.update({
-          'mechCoins': FieldValue.increment(1), // Increment by 1
+          'mechCoins': FieldValue.increment(1),
         });
       } else {
         print("User document not found.");
@@ -39,40 +44,96 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
+  // Get current location and convert it to a readable address
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Location services are disabled.")),
+        );
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Location permission denied.")),
+          );
+          return;
+        }
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+      Placemark place = placemarks[0];
+      String readableAddress =
+          "${place.street}, ${place.locality}, ${place.country}";
+      _addressController.text = readableAddress;
+    } catch (e) {
+      print("Error getting location: ${e.toString()}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error getting location: ${e.toString()}")),
+      );
+    }
+  }
+
+  // Countdown timer for the "Sign Up" button
+  void _startCountdown() {
+    setState(() {
+      _isSignUpEnabled = false;
+      _countdown = 10;
+    });
+
+    Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      setState(() {
+        if (_countdown > 0) {
+          _countdown--;
+        } else {
+          _isSignUpEnabled = true;
+          timer.cancel();
+        }
+      });
+    });
+  }
+
   // Sign up function
   Future<void> _signUp() async {
-    try {
-      // Create a new user using Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _phoneController.text.trim() + '@mechswift.com', // using phone as pseudo email
-        password: _passwordController.text.trim(),
-      );
+    if (_isSignUpEnabled) {
+      _startCountdown();
+      try {
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
+          email: _phoneController.text.trim() + '@mechswift.com',
+          password: _passwordController.text.trim(),
+        );
 
-      String userId = userCredential.user!.uid; // Get new user's ID
+        String userId = userCredential.user!.uid;
 
-      // Store additional user data in Firestore under "cars" collection
-      await _firestore.collection('cars').doc(userId).set({
-        'name': _nameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'address': _addressController.text.trim(),
-        'carModel': _carModelController.text.trim(),
-        'mechCoins': 0, // Initialize mechCoins in the new user's document
-      });
+        await _firestore.collection('cars').doc(userId).set({
+          'name': _nameController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'address': _addressController.text.trim(),
+          'carModel': _carModelController.text.trim(),
+          'mechCoins': 0,
+        });
 
-      // Get the currently logged-in user's ID
-      User? currentUser = _auth.currentUser;
-      String loggedInUserId = currentUser!.uid; // Get logged-in user ID
+        User? currentUser = _auth.currentUser;
+        String loggedInUserId = currentUser!.uid;
+        await incrementMechCoins(loggedInUserId);
 
-      // Increment mechCoins for the logged-in user
-      await incrementMechCoins(loggedInUserId); // Increment mechCoins for the logged-in user
-
-      // Navigate to the dashboard after successful sign-up
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } catch (e) {
-      print(e); // Handle errors (display to user if needed)
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
-      );
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      } catch (e) {
+        print(e);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: ${e.toString()}")),
+        );
+      }
     }
   }
 
@@ -81,7 +142,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Sign Up'),
-        // Removed the leading back button
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -97,9 +157,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 controller: _phoneController,
                 decoration: InputDecoration(labelText: "Phone Number"),
               ),
-              TextField(
-                controller: _addressController,
-                decoration: InputDecoration(labelText: "Address"),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _addressController,
+                      decoration: InputDecoration(labelText: "Address"),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.my_location),
+                    onPressed: _getCurrentLocation,
+                  ),
+                ],
               ),
               TextField(
                 controller: _carModelController,
@@ -117,17 +187,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _obscurePassword = !_obscurePassword; // Toggle password visibility
+                        _obscurePassword = !_obscurePassword;
                       });
                     },
                   ),
                 ),
-                obscureText: _obscurePassword, // Use the variable to hide/show password
+                obscureText: _obscurePassword,
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _signUp, // Trigger the sign-up process
-                child: Text("Sign Up"),
+                onPressed: _isSignUpEnabled ? _signUp : null,
+                child: _isSignUpEnabled
+                    ? Text("Sign Up")
+                    : Text("Wait $_countdown seconds"),
               ),
             ],
           ),

@@ -53,11 +53,17 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
         }
       }
 
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      Placemark place = placemarks[0]; // Get the first result
-      String readableAddress = "${place.street}, ${place.locality}, ${place.country}"; // Format the address
-      _addressController.text = readableAddress; // Set the address field
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(Duration(seconds: 10)); // Add timeout
+
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+      Placemark place = placemarks[0];
+      String readableAddress = "${place.street}, ${place.locality}, ${place.country}";
+      _addressController.text = readableAddress;
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,19 +74,22 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
 
   // Pick an image from gallery or take a photo
   Future<void> _pickImage() async {
-    final pickedSource = await showDialog<ImageSource>(context: context, builder: (context) => AlertDialog(
-      title: Text("Select Image Source"),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, ImageSource.camera),
-          child: Text("Camera"),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, ImageSource.gallery),
-          child: Text("Gallery"),
-        ),
-      ],
-    ));
+    final pickedSource = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Select Image Source"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.camera),
+            child: Text("Camera"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.gallery),
+            child: Text("Gallery"),
+          ),
+        ],
+      ),
+    );
 
     if (pickedSource != null) {
       final pickedFile = await _picker.pickImage(source: pickedSource);
@@ -129,7 +138,7 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
         DocumentSnapshot userDoc = await _firestore.collection('cars').doc(widget.userId).get();
         if (userDoc.exists) {
           await _firestore.collection('cars').doc(widget.userId).update({
-            'mechCoins': FieldValue.increment(1), // Increase by 1
+            'mechCoins': FieldValue.increment(1),
           });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -155,7 +164,7 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
         _imageUrl = null;
       });
 
-      Navigator.pop(context); // Return to the previous screen
+      Navigator.pop(context);
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -201,8 +210,8 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.my_location), // Location icon
-                  onPressed: _getCurrentLocation, // Fetch and set address on icon press
+                  icon: Icon(Icons.my_location),
+                  onPressed: _getCurrentLocation,
                 ),
               ],
             ),
