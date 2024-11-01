@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AvailableMechanicsScreen extends StatelessWidget {
   @override
@@ -26,7 +27,7 @@ class AvailableMechanicsScreen extends StatelessWidget {
           return ListView.builder(
             itemCount: mechanics.length,
             itemBuilder: (context, index) {
-              var mechanic = mechanics[index].data() as Map<String, dynamic>; // Cast to map
+              var mechanic = mechanics[index].data() as Map<String, dynamic>;
               return Card(
                 elevation: 4,
                 margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -47,9 +48,9 @@ class AvailableMechanicsScreen extends StatelessWidget {
                   ),
                   trailing: ElevatedButton(
                     onPressed: () {
-                      _showBookingDialog(context, mechanic['name']);
+                      _callMechanic(context, mechanic['phone']);
                     },
-                    child: Text('Book'),
+                    child: Text('Call'),
                   ),
                 ),
               );
@@ -60,74 +61,19 @@ class AvailableMechanicsScreen extends StatelessWidget {
     );
   }
 
-  void _showBookingDialog(BuildContext context, String mechanicName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Book $mechanicName'),
-          content: Text('Are you sure you want to book this mechanic?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                _showRatingDialog(context, mechanicName); // Open rating dialog after booking
-              },
-              child: Text('Book'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  void _callMechanic(BuildContext context, String phoneNumber) async {
+    final Uri url = Uri(scheme: 'tel', path: phoneNumber);
 
-  void _showRatingDialog(BuildContext context, String mechanicName) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Rate $mechanicName'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Please leave a rating and review.'),
-              SizedBox(height: 10),
-              TextField(
-                decoration: InputDecoration(hintText: 'Leave a comment'),
-                maxLines: 3,
-              ),
-              SizedBox(height: 10),
-              DropdownButton<int>(
-                value: 5, // Default rating
-                onChanged: (newValue) {
-                  // Handle rating change (can be stored in state)
-                },
-                items: [1, 2, 3, 4, 5].map<DropdownMenuItem<int>>((int value) {
-                  return DropdownMenuItem<int>(
-                    value: value,
-                    child: Text('$value Stars'),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the rating dialog
-                // Handle saving the review and rating (to Firestore or other backend)
-              },
-              child: Text('Submit'),
-            ),
-          ],
-        );
-      },
-    );
+    if (await canLaunch(url.toString())) {
+      await launch(url.toString());
+    } else {
+      // Show a snackbar if the number is invalid
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Could not launch $phoneNumber. Please check the number."),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }

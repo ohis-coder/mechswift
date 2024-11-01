@@ -44,6 +44,8 @@ dependencies:
   flutter_map_location_marker: ^9.1.1
   flutter_compass: ^0.8.0
   permission_handler: ^11.3.1
+  shared_preferences: ^2.3.2
+  url_launcher: ^6.3.1
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -53,6 +55,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # flutter_launcher_icons: ^0.14.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -66,6 +69,14 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/mechswift_logo.png
+
+#flutter_icons:
+ # android: true
+ # ios: true
+ # image_path: "assets/mechswift_icon.png" # Update this with the correct path to your logo
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

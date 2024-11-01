@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/loading_screen.dart'; // Import the new loading screen
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -19,7 +20,7 @@ class MechSwiftApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MechSwift',
-      initialRoute: '/login',
+      home: LoadingScreen(), // Set LoadingScreen as the home screen
       routes: {
         '/login': (context) => LoginScreen(),
         '/signup': (context) => SignUpScreen(),

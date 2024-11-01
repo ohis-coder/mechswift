@@ -11,7 +11,7 @@ class MechCoinsTradeStoreScreen extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          "MechCoins store coming to you soon...",
+          "MechCoins Trade Store coming to you soon...",
           style: TextStyle(fontSize: 18, color: Colors.grey),
           textAlign: TextAlign.center,
         ),
