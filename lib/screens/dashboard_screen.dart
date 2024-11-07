@@ -9,6 +9,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _mechCoins = 0; // Variable to hold Mech Coins
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // Key to access Scaffold state
 
   // Stream to listen to MechCoins changes from the cars collection
   Stream<DocumentSnapshot> _mechCoinsStream() {
@@ -23,8 +24,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Assigning the GlobalKey to Scaffold
       appBar: AppBar(
         title: Text('Dashboard'),
+        leading: IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () {
+            _scaffoldKey.currentState?.openDrawer(); // Open the sidebar
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.logout), // Logout icon
@@ -34,6 +42,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'MechSwift Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Update User Information'),
+              onTap: () {
+                Navigator.pop(context); // Close the drawer
+                Navigator.pushNamed(context, '/update-user'); // Navigate to update user screen
+              },
+            ),
+          ],
+        ),
       ),
       body: Center(
         child: StreamBuilder<DocumentSnapshot>(

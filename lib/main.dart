@@ -8,6 +8,7 @@ import 'screens/available_mechanics_screen.dart';
 import 'screens/mechcoins_trade_store_screen.dart'; // Import MechCoins Trade Store screen
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'screens/update_user_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ class MechSwiftApp extends StatelessWidget {
         '/signup': (context) => SignUpScreen(),
         '/dashboard': (context) => DashboardScreen(),
         '/available-mechanics': (context) => AvailableMechanicsScreen(),
+        '/update-user': (context) => UpdateUserScreen(),
         '/sign_up_mech': (context) {
           final user = FirebaseAuth.instance.currentUser;
           if (user != null) {
