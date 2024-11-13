@@ -14,16 +14,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _carMakeController = TextEditingController();
   final _carModelController = TextEditingController();
+  final _carYearController = TextEditingController();
+  final _carVinController = TextEditingController(); // Optional VIN
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isSignUpEnabled = true; // Track if sign-up button is enabled
-  int _countdown = 0; // Countdown timer variable
+  bool _isSignUpEnabled = true;
+  int _countdown = 0;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Increment MechCoins for the currently logged-in user
   Future<void> incrementMechCoins(String userId) async {
     try {
       DocumentReference userDoc = _firestore.collection('cars').doc(userId);
@@ -44,7 +46,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  // Get current location and convert it to a readable address
   Future<void> _getCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -83,7 +84,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  // Countdown timer for the "Sign Up" button
   void _startCountdown() {
     setState(() {
       _isSignUpEnabled = false;
@@ -102,7 +102,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
   }
 
-  // Sign up function
   Future<void> _signUp() async {
     if (_isSignUpEnabled) {
       _startCountdown();
@@ -119,7 +118,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'name': _nameController.text.trim(),
           'phone': _phoneController.text.trim(),
           'address': _addressController.text.trim(),
-          'carModel': _carModelController.text.trim(),
+          'car_details': {
+            'make': _carMakeController.text.trim(),
+            'model': _carModelController.text.trim(),
+            'year': _carYearController.text.trim(),
+            'vin': _carVinController.text.trim() // Optional field
+          },
           'mechCoins': 0,
         });
 
@@ -172,8 +176,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ],
               ),
               TextField(
+                controller: _carMakeController,
+                decoration: InputDecoration(labelText: "Car Make"),
+              ),
+              TextField(
                 controller: _carModelController,
                 decoration: InputDecoration(labelText: "Car Model"),
+              ),
+              TextField(
+                controller: _carYearController,
+                decoration: InputDecoration(labelText: "Car Year"),
+              ),
+              TextField(
+                controller: _carVinController,
+                decoration: InputDecoration(labelText: "VIN (Optional)"),
               ),
               TextField(
                 controller: _passwordController,
@@ -213,7 +229,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _carMakeController.dispose();
     _carModelController.dispose();
+    _carYearController.dispose();
+    _carVinController.dispose();
     _passwordController.dispose();
     super.dispose();
   }

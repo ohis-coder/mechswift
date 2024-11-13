@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';  // Import Firebase Auth
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math'; // Corrected import for random number generation
 import 'package:geocoding/geocoding.dart'; // Import geocoding package
 import 'package:geolocator/geolocator.dart'; // Import geolocator package
 
@@ -23,11 +24,12 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
   String? _imageUrl;
   final ImagePicker _picker = ImagePicker();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;  // Firebase Auth instance
 
   // Generate a random password
   String _generateRandomPassword() {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    Random random = Random();
+    Random random = Random();  // Correct random usage
     return List.generate(8, (index) => chars[random.nextInt(chars.length)]).join();
   }
 
@@ -122,7 +124,13 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
       // Generate random password for the mechanic
       String randomPassword = _generateRandomPassword();
 
-      // Add mechanic to 'users' collection
+      // Add mechanic to Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: '$phone@yourapp.com', // Use phone number as email
+        password: randomPassword,
+      );
+
+      // Add mechanic to 'users' collection in Firestore
       DocumentReference mechanicRef = await _firestore.collection('users').add({
         'name': name,
         'address': address,
@@ -131,6 +139,7 @@ class _SignUpMechScreenState extends State<SignUpMechScreen> {
         'specialty': specialty,
         'mechCoins': 0,
         'password': randomPassword,
+        // Remove auth_uid field (Firestore will auto-generate a doc ID)
       });
 
       // Award Mech Coins to the user who registered the mechanic (increase by 1)

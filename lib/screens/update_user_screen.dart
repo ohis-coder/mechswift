@@ -12,9 +12,12 @@ class UpdateUserScreen extends StatefulWidget {
 }
 
 class _UpdateUserScreenState extends State<UpdateUserScreen> {
-  TextEditingController _phoneController = TextEditingController();
-  TextEditingController _addressController = TextEditingController();
-  TextEditingController _carModelController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _carMakeController = TextEditingController();
+  final TextEditingController _carModelController = TextEditingController();
+  final TextEditingController _carYearController = TextEditingController();
+  final TextEditingController _carVinController = TextEditingController(); // Optional VIN
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -22,20 +25,17 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
   // Method to get current location and convert to address
   Future<void> _getCurrentAddress() async {
     try {
-      // Check location permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          return; // Permissions denied, show an error or return
+          return; // Permissions denied
         }
       }
 
-      // Get current position
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
 
-      // Use geocoding to convert coordinates to a readable address
       List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude, position.longitude);
 
@@ -58,11 +58,15 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
-        // Save changes to Firestore
         await _firestore.collection('cars').doc(user.uid).update({
           'phone': _phoneController.text,
           'address': _addressController.text,
-          'carModel': _carModelController.text,
+          'car_details': {
+            'make': _carMakeController.text.trim(),
+            'model': _carModelController.text.trim(),
+            'year': _carYearController.text.trim(),
+            'vin': _carVinController.text.trim() // Optional VIN
+          },
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -95,34 +99,59 @@ class _UpdateUserScreenState extends State<UpdateUserScreen> {
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Phone Number'),
-            ),
-            TextField(
-              controller: _addressController,
-              decoration: InputDecoration(
-                labelText: 'Address',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.my_location),
-                  onPressed: _getCurrentAddress,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: _phoneController,
+                decoration: InputDecoration(labelText: 'Phone Number'),
+              ),
+              TextField(
+                controller: _addressController,
+                decoration: InputDecoration(
+                  labelText: 'Address',
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.my_location),
+                    onPressed: _getCurrentAddress,
+                  ),
                 ),
               ),
-            ),
-            TextField(
-              controller: _carModelController,
-              decoration: InputDecoration(labelText: 'Car Model'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveChanges,
-              child: Text('Save Changes'),
-            ),
-          ],
+              TextField(
+                controller: _carMakeController,
+                decoration: InputDecoration(labelText: 'Car Make'),
+              ),
+              TextField(
+                controller: _carModelController,
+                decoration: InputDecoration(labelText: 'Car Model'),
+              ),
+              TextField(
+                controller: _carYearController,
+                decoration: InputDecoration(labelText: 'Car Year'),
+              ),
+              TextField(
+                controller: _carVinController,
+                decoration: InputDecoration(labelText: 'VIN (Optional)'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _saveChanges,
+                child: Text('Save Changes'),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _addressController.dispose();
+    _carMakeController.dispose();
+    _carModelController.dispose();
+    _carYearController.dispose();
+    _carVinController.dispose();
+    super.dispose();
   }
 }
